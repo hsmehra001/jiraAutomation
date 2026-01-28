@@ -1,0 +1,21 @@
+[Unit]
+Description=Jira Automation Web UI
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/jira-automation-web-ui
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=/etc/systemd/system/jira-automation.env
+ExecStart=/usr/local/bin/gunicorn -w 4 -b 0.0.0.0:5000 app:app
+Restart=always
+RestartSec=10
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Jira Automation{% endblock %}
+
+{% block content %}
+<div class="card text-center">
+    <h2>Welcome to Jira Automation</h2>
+    <p>Streamline your Jira workflow with automated task processing and subtask creation.</p>
+</div>
+
+<div class="card-grid">
+    <a href="{{ url_for('process_tasks_page') }}" class="card-link">
+        <div class="card">
+            <h3>Process Tasks</h3>
+            <p>Automatically process assigned subtasks through workflow states:</p>
+            <ul>
+                <li>Move from Open to In Progress</li>
+                <li>Log work time</li>
+                <li>Complete tasks</li>
+            </ul>
+            <p class="mt-2"><strong>→ Get Started</strong></p>
+        </div>
+    </a>
+
+    <a href="{{ url_for('create_subtasks_page') }}" class="card-link">
+        <div class="card">
+            <h3>Create Subtasks</h3>
+            <p>Quickly create standard development subtasks:</p>
+            <ul>
+                <li>7 predefined subtask templates</li>
+                <li>Auto-assigned to you</li>
+                <li>2-hour estimates</li>
+            </ul>
+            <p class="mt-2"><strong>→ Get Started</strong></p>
+        </div>
+    </a>
+</div>
+
+<div class="card">
+    <h3>How It Works</h3>
+    <ol>
+        <li><strong>Choose an automation:</strong> Select either task processing or subtask creation</li>
+        <li><strong>Enter story key:</strong> Provide the Jira story key (e.g., PROJ-123)</li>
+        <li><strong>Authenticate:</strong> Use your Jira Personal Access Token if not configured</li>
+        <li><strong>Execute:</strong> Click the button and watch the automation work</li>
+    </ol>
+    
+    <h3 class="mt-3">Need Help?</h3>
+    <p>For questions or issues, please refer to the README documentation or contact your system administrator.</p>
+</div>
+{% endblock %}
