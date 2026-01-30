@@ -50,9 +50,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Display results
-            displayResults(data.results, data.summary);
-            showToast('Tasks processed successfully!', 'success');
+            // Check if we have results or just a background processing message
+            if (data.results && data.summary) {
+                // Display results for synchronous processing
+                displayResults(data.results, data.summary);
+                showToast('Tasks processed successfully!', 'success');
+            } else if (data.message) {
+                // Display background processing message
+                displayBackgroundProcessingMessage(storyKey);
+                showToast('Tasks are being processed in the background!', 'success');
+            }
 
         } catch (error) {
             hideLoading();
@@ -116,6 +123,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             });
         }
+
+        resultsDiv.innerHTML = html;
+        resultsDiv.style.display = 'block';
+        errorDiv.style.display = 'none';
+    }
+
+    function displayBackgroundProcessingMessage(storyKey) {
+        let html = `
+            <div class="summary">
+                <h3>Tasks Processing</h3>
+                <div class="processing-message">
+                    <p>Your tasks for story <strong>${storyKey}</strong> are being processed in the background.</p>
+                    <p>You can safely navigate away from this page. The processing will continue on the server.</p>
+                    <p>Check Jira for the latest status of your tasks.</p>
+                </div>
+            </div>
+        `;
 
         resultsDiv.innerHTML = html;
         resultsDiv.style.display = 'block';
