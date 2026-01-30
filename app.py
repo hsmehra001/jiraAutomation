@@ -1,5 +1,6 @@
 """Flask application for Jira Automation Web UI."""
 import logging
+import threading
 from flask import Flask, render_template, request, jsonify
 from jira import JIRAError
 from config import Config
@@ -65,8 +66,7 @@ def api_process_tasks():
     Response JSON:
         {
             "success": true,
-            "results": [...],
-            "summary": {...}
+            "message": "Tasks are being processed in the background"
         }
     """
     try:
@@ -96,19 +96,28 @@ def api_process_tasks():
                 'error': 'Invalid story key format. Expected format: PROJ-123'
             }), 400
 
-        logger.info(f"Processing tasks for story: {story_key}")
+        logger.info(f"Starting background processing for story: {story_key}")
 
         # Initialize Jira client and processor
         jira_client = JiraClient(Config.JIRA_SERVER, jira_pat)
         processor = TaskProcessor(jira_client)
 
-        # Process subtasks
-        result = processor.process_story_subtasks(story_key)
+        # Start a background thread to process tasks
+        def process_tasks_background():
+            try:
+                processor.process_story_subtasks(story_key)
+                logger.info(f"Background processing completed for story: {story_key}")
+            except Exception as e:
+                logger.exception(f"Error in background processing for story: {story_key}")
 
+        thread = threading.Thread(target=process_tasks_background)
+        thread.daemon = True  # Daemon threads exit when the main program exits
+        thread.start()
+
+        # Return immediate response
         return jsonify({
             'success': True,
-            'results': result['results'],
-            'summary': result['summary']
+            'message': 'Tasks are being processed in the background'
         })
 
     except JIRAError as e:
