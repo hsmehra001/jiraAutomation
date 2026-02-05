@@ -103,6 +103,74 @@ class SubtaskCreator:
             'summary': summary_stats
         }
     
+    def create_custom_subtasks(self, story_key: str, subtask_titles: List[str]) -> Dict:
+        """
+        Create custom subtasks from user-provided titles.
+        
+        Args:
+            story_key: Parent story key
+            subtask_titles: List of subtask titles to create
+            
+        Returns:
+            dict: {
+                'created': List of created subtask info,
+                'summary': Overall summary statistics
+            }
+            
+        Raises:
+            JIRAError: If Jira API calls fail
+        """
+        logger.info(f"Creating {len(subtask_titles)} custom subtasks under story: {story_key}")
+        
+        # Get current user
+        current_user = self.jira_client.get_current_user()
+        username = current_user['username']
+        
+        # Get subtask issue type ID
+        subtask_issue_type_id = self._get_subtask_issue_type_id()
+        if not subtask_issue_type_id:
+            raise Exception("Sub-task issue type not found")
+        
+        # Get project info
+        project = self.jira_client.get_project(story_key)
+        
+        created = []
+        failed_count = 0
+        
+        for title in subtask_titles:
+            try:
+                result = self._create_single_subtask(
+                    story_key,
+                    title,
+                    project['id'],
+                    subtask_issue_type_id,
+                    username
+                )
+                created.append(result)
+                logger.info(f"Created {result['key']} - {title}")
+            except Exception as e:
+                logger.error(f"Failed to create subtask '{title}': {str(e)}")
+                created.append({
+                    'key': None,
+                    'summary': title,
+                    'status': 'error',
+                    'message': str(e)
+                })
+                failed_count += 1
+        
+        summary_stats = {
+            'total': len(subtask_titles),
+            'created': len(subtask_titles) - failed_count,
+            'failed': failed_count
+        }
+        
+        logger.info(f"Custom subtask creation complete: {summary_stats}")
+        
+        return {
+            'created': created,
+            'summary': summary_stats
+        }
+    
     def _create_single_subtask(self, parent_key: str, summary: str, 
                                project_id: str, issue_type_id: str, 
                                username: str) -> Dict:

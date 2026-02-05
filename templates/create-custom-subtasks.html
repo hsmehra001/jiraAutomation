@@ -1,23 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Create Subtasks - Jira Automation{% endblock %}
+{% block title %}Create Custom Subtasks - Jira Automation{% endblock %}
 
 {% block content %}
 <div class="card">
-    <h2>Create Standard Subtasks</h2>
-    <p>This tool will create the following standard development subtasks under a parent story:</p>
-    <ul>
-        <li>Unit Test Case Execution</li>
-        <li>Peer Code Review</li>
-        <li>Analysis & Understanding</li>
-        <li>Internal Grooming among Team Members</li>
-        <li>Dev Testing</li>
-        <li>Unit Test Case Creation</li>
-        <li>P0 Demo to QA and other stakeholders</li>
-    </ul>
+    <h2>Create Custom Subtasks</h2>
+    <p>Create custom subtasks from your own text input. Enter each subtask title on a new line.</p>
     <p class="mt-2">All subtasks will be assigned to you with a 2-hour estimate.</p>
 
-    <form id="createForm" class="mt-3">
+    <form id="customSubtaskForm" class="mt-3">
         <div class="form-group">
             <label for="storyKey">Story Key *</label>
             <input type="text" id="storyKey" name="storyKey" placeholder="e.g., PROJ-123" required
@@ -68,12 +59,20 @@
         </div>
 
         <div class="form-group">
+            <label for="subtaskTitles">Subtask Titles *</label>
+            <textarea id="subtaskTitles" name="subtaskTitles" rows="25" style="min-height: 500px; max-height: 800px;"
+                placeholder="Enter subtask titles (one per line)&#10;Example:&#10;Added flag to remove permission check for user entity&#10;Added user rest api service in the registry"
+                required></textarea>
+            <small>Enter each subtask title on a new line</small>
+        </div>
+
+        <div class="form-group">
             <label for="jiraPat">Jira Personal Access Token *</label>
             <input type="password" id="jiraPat" name="jiraPat" placeholder="Enter your Jira PAT" required>
             <small>Your personal access token for Jira authentication</small>
         </div>
 
-        <button type="submit" class="btn btn-primary">Create Subtasks</button>
+        <button type="submit" class="btn btn-primary">Create Custom Subtasks</button>
     </form>
 
     <div id="error" class="alert alert-error" style="display: none;"></div>
@@ -82,5 +81,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/subtask-creator.js') }}"></script>
+<script src="{{ url_for('static', filename='js/custom-subtask-creator.js') }}"></script>
 {% endblock %}

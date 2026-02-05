@@ -1,6 +1,6 @@
-// Subtask creator frontend logic
+// Custom subtask creator frontend logic
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('createForm');
+    const form = document.getElementById('customSubtaskForm');
     const errorDiv = document.getElementById('error');
     const resultsDiv = document.getElementById('results');
 
@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get form values
         const storyKey = document.getElementById('storyKey').value.trim();
         const customFieldValue = document.getElementById('customFieldValue').value.trim();
+        const subtaskTitles = document.getElementById('subtaskTitles').value.trim();
         const jiraPat = document.getElementById('jiraPat').value.trim();
 
         // Validate story key format
@@ -20,6 +21,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!customFieldValue) {
             showError('Team/Component selection is required');
+            return;
+        }
+
+        if (!subtaskTitles) {
+            showError('Subtask titles are required');
+            return;
+        }
+
+        // Parse subtask titles
+        const subtaskList = subtaskTitles
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+
+        if (subtaskList.length === 0) {
+            showError('Please enter at least one subtask title');
             return;
         }
 
@@ -36,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showLoading();
 
         try {
-            const response = await fetch('/api/create-subtasks', {
+            const response = await fetch('/api/create-custom-subtasks', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -44,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({
                     story_key: storyKey,
                     custom_field_value: customFieldValue,
+                    subtask_titles: subtaskList,
                     jira_pat: jiraPat
                 })
             });
@@ -59,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Display results
             displayResults(data.created, data.summary);
-            showToast('Subtasks created successfully!', 'success');
+            showToast('Custom subtasks created successfully!', 'success');
 
         } catch (error) {
             hideLoading();

@@ -52,6 +52,12 @@ def create_subtasks_page():
     return render_template('create-subtasks.html')
 
 
+@app.route('/create-custom-subtasks')
+def create_custom_subtasks_page():
+    """Custom subtask creation page."""
+    return render_template('create-custom-subtasks.html')
+
+
 @app.route('/api/process-tasks', methods=['POST'])
 def api_process_tasks():
     """
@@ -144,6 +150,7 @@ def api_create_subtasks():
     Request JSON:
         {
             "story_key": "PROJ-123",
+            "custom_field_value": "Platform Comm Mgmt",
             "jira_pat": "required_token"
         }
 
@@ -164,6 +171,15 @@ def api_create_subtasks():
             }), 400
 
         story_key = data['story_key'].strip()
+
+        # Validate custom_field_value
+        if 'custom_field_value' not in data or not data['custom_field_value'].strip():
+            return jsonify({
+                'success': False,
+                'error': 'custom_field_value is required'
+            }), 400
+
+        custom_field_value = data['custom_field_value'].strip()
 
         # Make jira_pat mandatory
         if 'jira_pat' not in data or not data['jira_pat'].strip():
@@ -188,7 +204,7 @@ def api_create_subtasks():
         creator = SubtaskCreator(
             jira_client,
             Config.CUSTOM_FIELD_ID,
-            Config.CUSTOM_FIELD_VALUE,
+            custom_field_value,
             Config.DEFAULT_ESTIMATE
         )
 
@@ -211,6 +227,113 @@ def api_create_subtasks():
 
     except Exception as e:
         logger.exception("Unexpected error creating subtasks")
+        return jsonify({
+            'success': False,
+            'error': f'Unexpected error: {str(e)}'
+        }), 500
+
+
+@app.route('/api/create-custom-subtasks', methods=['POST'])
+def api_create_custom_subtasks():
+    """
+    API endpoint to create custom subtasks from user input.
+
+    Request JSON:
+        {
+            "story_key": "PROJ-123",
+            "custom_field_value": "Platform Comm Mgmt",
+            "subtask_titles": ["Title 1", "Title 2"],
+            "jira_pat": "required_token"
+        }
+
+    Response JSON:
+        {
+            "success": true,
+            "created": [...],
+            "summary": {...}
+        }
+    """
+    try:
+        data = request.get_json()
+
+        if not data or 'story_key' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'story_key is required'
+            }), 400
+
+        story_key = data['story_key'].strip()
+
+        # Validate custom_field_value
+        if 'custom_field_value' not in data or not data['custom_field_value'].strip():
+            return jsonify({
+                'success': False,
+                'error': 'custom_field_value is required'
+            }), 400
+
+        custom_field_value = data['custom_field_value'].strip()
+
+        # Validate subtask_titles
+        if 'subtask_titles' not in data or not isinstance(data['subtask_titles'], list):
+            return jsonify({
+                'success': False,
+                'error': 'subtask_titles must be a list'
+            }), 400
+
+        subtask_titles = [title.strip() for title in data['subtask_titles'] if title.strip()]
+
+        if len(subtask_titles) == 0:
+            return jsonify({
+                'success': False,
+                'error': 'At least one subtask title is required'
+            }), 400
+
+        # Make jira_pat mandatory
+        if 'jira_pat' not in data or not data['jira_pat'].strip():
+            return jsonify({
+                'success': False,
+                'error': 'Jira PAT is required'
+            }), 400
+
+        jira_pat = data['jira_pat'].strip()
+
+        # Validate story key format
+        if not story_key or '-' not in story_key:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid story key format. Expected format: PROJ-123'
+            }), 400
+
+        logger.info(f"Creating {len(subtask_titles)} custom subtasks for story: {story_key}")
+
+        # Initialize Jira client and creator
+        jira_client = JiraClient(Config.JIRA_SERVER, jira_pat)
+        creator = SubtaskCreator(
+            jira_client,
+            Config.CUSTOM_FIELD_ID,
+            custom_field_value,
+            Config.DEFAULT_ESTIMATE
+        )
+
+        # Create custom subtasks
+        result = creator.create_custom_subtasks(story_key, subtask_titles)
+
+        return jsonify({
+            'success': True,
+            'created': result['created'],
+            'summary': result['summary']
+        })
+
+    except JIRAError as e:
+        logger.error(f"Jira API error: {e.text}")
+        return jsonify({
+            'success': False,
+            'error': f'Jira API Error: {e.text}',
+            'error_code': e.status_code
+        }), e.status_code if hasattr(e, 'status_code') else 500
+
+    except Exception as e:
+        logger.exception("Unexpected error creating custom subtasks")
         return jsonify({
             'success': False,
             'error': f'Unexpected error: {str(e)}'
